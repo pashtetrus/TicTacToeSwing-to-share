@@ -17,15 +17,15 @@ public class GameWindow extends JFrame {
     Map map;
     SettingsWindow settings;
 
-    public GameWindow(int fieldSize, int winLen) {
+    public GameWindow() {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocation(WINDOW_POSX, WINDOW_POSY);
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setTitle("TicTacToe");
         setResizable(false);
 
-        map = new Map(fieldSize);
-        settings = new SettingsWindow(this, fieldSize, winLen);
+        map = new Map();
+        settings = new SettingsWindow(this);
 
         btnExit.addActionListener(new ActionListener() {
             @Override

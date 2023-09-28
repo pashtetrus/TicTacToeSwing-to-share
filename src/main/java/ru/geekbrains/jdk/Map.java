@@ -28,12 +28,9 @@ public class Map extends JPanel {
     private char[][] field;
     private boolean isGameOver;
     private boolean isInitialized;
+    private int winLen;
 
-    Map(int fieldSize) {
-        this.fieldSize = fieldSize;
-        this.fieldSizeX = fieldSize;
-        this.fieldSizeY = fieldSize;
-
+    Map() {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent e) {
@@ -53,7 +50,7 @@ public class Map extends JPanel {
         if (checkEndGame(HUMAN_DOT, STATE_WIN_HUMAN)) return;
         repaint();
         aiTurn();
-        if (checkEndGame(AI_DOT, STATE_WIN_AI)) return;
+        checkEndGame(AI_DOT, STATE_WIN_AI);
     }
 
     private boolean checkEndGame(int dot, int gameOverType) {
@@ -72,11 +69,17 @@ public class Map extends JPanel {
         return false;
     }
 
-    void startNewGame(int mode, int fSzX, int fSzY, int winLen) {
-        System.out.printf("\nMode: %d; \nSize: x=%d, y=%d;\nWin Length: %d", mode, fSzX, fSzY, winLen);
-        initMap();
+    void startNewGame(int mode, int fieldSizeX, int fieldSizeY, int winLen) {
+        System.out.printf("\nMode: %d; \nSize: x=%d, y=%d;\nWin Length: %d\n", mode, fieldSizeX, fieldSizeY, winLen);
+        this.fieldSizeX = fieldSizeX;
+        this.fieldSizeY = fieldSizeY;
+        this.fieldSize = fieldSizeX;
+        this.winLen = winLen;
         isGameOver = false;
         isInitialized = true;
+
+        initMap();
+
         repaint();
     }
 
@@ -108,17 +111,12 @@ public class Map extends JPanel {
 
                 if (field[y][x] == HUMAN_DOT) {
                     g.setColor(Color.BLUE);
-                    g.fillOval(x * cellWidth + DOT_PADDING,
-                            y * cellHeight + DOT_PADDING,
-                            cellWidth - DOT_PADDING * 2,
-                            cellHeight - DOT_PADDING * 2);
+                    g.fillOval(x * cellWidth + DOT_PADDING, y * cellHeight + DOT_PADDING, cellWidth - DOT_PADDING * 2, cellHeight - DOT_PADDING * 2);
 
                 } else if (field[y][x] == AI_DOT) {
                     g.setColor(new Color(0xff0000));
-                    g.fillOval(x * cellWidth + DOT_PADDING,
-                            y * cellHeight + DOT_PADDING,
-                            cellWidth - DOT_PADDING * 2,
-                            cellHeight - DOT_PADDING * 2);
+                    g.fillOval(x * cellWidth + DOT_PADDING, y * cellHeight + DOT_PADDING, cellWidth - DOT_PADDING * 2, cellHeight - DOT_PADDING * 2);
+
                 } else {
                     throw new RuntimeException("Unexpected value " + field[y][x] + " in cell: x=" + x + " y=" + y);
                 }
@@ -176,18 +174,25 @@ public class Map extends JPanel {
         field[y][x] = AI_DOT;
     }
 
+    private boolean checkLine(int x, int y, int vx, int vy, int len, int c) {
+        final int far_x = x + (len - 1) * vx;
+        final int far_y = y + (len - 1) * vy;
+        if (!isValidCell(far_x, far_y)) return false;
+        for (int i = 0; i < len; i++) {
+            if (field[y + i * vy][x + i * vx] != c) return false;
+        }
+        return true;
+    }
+
     private boolean checkWin(int c) {
-        if (field[0][0] == c && field[0][1] == c && field[0][2] == c) return true;
-        if (field[1][0] == c && field[1][1] == c && field[1][2] == c) return true;
-        if (field[2][0] == c && field[2][1] == c && field[2][2] == c) return true;
-
-        if (field[0][0] == c && field[1][0] == c && field[2][0] == c) return true;
-        if (field[0][1] == c && field[1][1] == c && field[2][1] == c) return true;
-        if (field[0][2] == c && field[1][2] == c && field[2][2] == c) return true;
-
-        if (field[0][0] == c && field[1][1] == c && field[2][2] == c) return true;
-        if (field[0][2] == c && field[1][1] == c && field[2][0] == c) return true;
-
+        for (int i = 0; i < fieldSizeX; i++) {
+            for (int j = 0; j < fieldSizeY; j++) {
+                if (checkLine(i, j, 1, 0, winLen, c)) return true;
+                if (checkLine(i, j, 1, 1, winLen, c)) return true;
+                if (checkLine(i, j, 0, 1, winLen, c)) return true;
+                if (checkLine(i, j, 1, -1, winLen, c)) return true;
+            }
+        }
         return false;
     }
 
